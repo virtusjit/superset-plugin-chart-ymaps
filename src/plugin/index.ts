@@ -35,9 +35,11 @@ export default class SupersetPluginChartYmaps extends ChartPlugin {
    */
   constructor() {
     const metadata = new ChartMetadata({
-      description: 'Superset plugin Yandex Maps',
-      name: t('Ymaps'),
+      category: t('Map'),
+      description: 'Yandex Maps plugin with heatmap mode and drill support.',
+      name: t('Yandex Maps'),
       thumbnail,
+      tags: [t('Yandex'), t('map'), t('GIS'), t('Heatmap')],
     });
 
     super({
