@@ -16,7 +16,7 @@ import { useYandexMaps } from './hooks/useYandexMaps';
 import { darkenColor, getHeatmapColor, getRegionColor, getSafeColor } from './utils/color';
 import { Legend, LegendItem } from './components/Legend';
 
-import { initializeYandexMaps } from '../src/yandex-init';
+import { initializeYandexMaps } from './yandex-init';
 
 declare global {
   interface Window {
