@@ -1406,13 +1406,22 @@ export default function SupersetPluginChartYmaps(props: SupersetPluginChartYmaps
       navigateToMinLevel();
     };
 
-    const handleClickCrossFilter = () => {
+    const handleClickCrossFilter = () => {      
       if (detailModal.region) {
+        console.log(detailModal.region.region_name);
         handleCrossFilter(detailModal.region.region_name);
       }
     };
 
+    //очистка фильтра если клик на очистку был на другом регионе
+    const handleClickClearFilter = () => {
+      if (filterState?.selectedValues) {
+        handleCrossFilter(filterState?.selectedValues?.[0]);
+      }
+    };
+
     const isFilterActive = filterState?.selectedValues?.includes(detailModal.region.region_name);
+    const isGlobalFilterActive = filterState?.selectedValues?.length > 0;
 
     const showReturnToMin = navigationState.currentLevel > minLevel + 1;
 
@@ -1425,7 +1434,7 @@ export default function SupersetPluginChartYmaps(props: SupersetPluginChartYmaps
             <strong>{detailModal.region.region_name}</strong>
             <br />
             Уровень: {detailModal.region.level}
-            {isFilterActive && (
+            {isGlobalFilterActive && (
               <div style={{ 
                 marginTop: '8px', 
                 padding: '4px 8px', 
@@ -1435,7 +1444,7 @@ export default function SupersetPluginChartYmaps(props: SupersetPluginChartYmaps
                 fontSize: '12px',
                 color: '#0050b3'
               }}>
-                ✓ Фильтр активен
+                ✓ Фильтр активен<br />{filterState?.selectedValues?.[0]}
               </div>
             )}
           </div>
@@ -1446,6 +1455,14 @@ export default function SupersetPluginChartYmaps(props: SupersetPluginChartYmaps
                 onClick={handleClickCrossFilter}
               >
                 {isFilterActive ? 'Сбросить фильтр' : 'Применить фильтр'}
+              </button>
+            )}
+            {emitCrossFilters && !isFilterActive && isGlobalFilterActive && (
+              <button 
+                className={`detail-modal-button ${'secondary'}`}
+                onClick={handleClickClearFilter}
+              >
+                {'Сбросить фильтр'}
               </button>
             )}
 
