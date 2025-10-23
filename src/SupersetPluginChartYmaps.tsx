@@ -524,19 +524,49 @@ export default function SupersetPluginChartYmaps(props: SupersetPluginChartYmaps
     const uniqueLevels = [...new Set(data.map((item: RegionData) => item.level))];
     const uniqueRegions = [...new Set(data.map((item: RegionData) => item.id))];
     
-    if (navigationState.currentLevel !== 1 || navigationState.currentParentId !== null) {
-      return data.filter((item: RegionData) => {
-        if (navigationState.currentLevel === 1) {
-          return item.level === 1;
+    const minLevel = Math.min(...uniqueLevels);
+    
+    const isInitialState = navigationState.currentLevel === 1 && navigationState.currentParentId === null;
+    const hasFirstLevel = uniqueLevels.includes(1);
+    
+    if (isInitialState && !hasFirstLevel) {
+      return data.filter((item: RegionData) => item.level === minLevel);
+    }
+    
+    if (!isInitialState) {
+      const currentLevelExists = uniqueLevels.includes(navigationState.currentLevel);
+      
+      if (!currentLevelExists) {
+        console.warn(`⚠️ Уровень ${navigationState.currentLevel} не существует в данных!`);
+        return data.filter((item: RegionData) => item.level === minLevel);
+      }
+      
+      if (navigationState.currentParentId !== null) {
+        const parentExists = data.some(item => item.id === navigationState.currentParentId);
+        if (!parentExists) {
+          console.warn(`⚠️ Parent ${navigationState.currentParentId} не существует в данных!`);
+          return data.filter((item: RegionData) => item.level === minLevel);
+        }
+      }
+      
+      const filtered = data.filter((item: RegionData) => {
+        const levelMatch = item.level === navigationState.currentLevel;
+        
+        if (navigationState.currentParentId === null) {
+          return levelMatch;
         }
         
-        return item.level === navigationState.currentLevel && 
-              item.parent_id === navigationState.currentParentId;
+        return levelMatch && item.parent_id === navigationState.currentParentId;
       });
+      
+      return filtered;
+    }
+    
+    if (hasFirstLevel) {
+      return data.filter((item: RegionData) => item.level === 1);
     }
     
     if (uniqueLevels.length > 1 && uniqueRegions.length <= 50) {
-      const minLevel = Math.min(...uniqueLevels);
       return data.filter((item: RegionData) => item.level === minLevel);
     }
     
@@ -544,27 +574,46 @@ export default function SupersetPluginChartYmaps(props: SupersetPluginChartYmaps
       return data;
     }
     
-    return data.filter((item: RegionData) => item.level === 1);
+    // Fallback
+    return data.filter((item: RegionData) => item.level === minLevel);
   }, [data, navigationState.currentLevel, navigationState.currentParentId]);
-
 
   useEffect(() => {
     if (!data || !Array.isArray(data) || data.length === 0) return;
     
-    if (navigationState.currentLevel > 1 || navigationState.currentParentId !== null) {
+    const uniqueLevels = [...new Set(data.map((item: RegionData) => item.level))];
+    const minLevel = Math.min(...uniqueLevels);
+    const hasFirstLevel = uniqueLevels.includes(1);
+    
+    const currentLevelExists = uniqueLevels.includes(navigationState.currentLevel);
+    const parentExists = navigationState.currentParentId 
+      ? data.some(item => item.id === navigationState.currentParentId)
+      : true;
+    
+    if (!currentLevelExists || !parentExists) {
+      if (hasFirstLevel) {
+        setNavigationState({
+          currentLevel: 1,
+          currentParentId: null
+        });
+      } else {
+        setNavigationState({
+          currentLevel: minLevel,
+          currentParentId: null
+        });
+      }
       return;
     }
     
-    const uniqueLevels = [...new Set(data.map((item: RegionData) => item.level))];
-    const hasFirstLevel = uniqueLevels.includes(1);
+    const isInitialState = navigationState.currentLevel === 1 && navigationState.currentParentId === null;
     
-    if (hasFirstLevel && navigationState.currentLevel !== 1) {
+    if (isInitialState && !hasFirstLevel && navigationState.currentLevel === 1) {
       setNavigationState({
-        currentLevel: 1,
+        currentLevel: minLevel,
         currentParentId: null
       });
     }
-  }, [data]);
+  }, [data]); 
 
   const minLevel = React.useMemo(() => {
     if (!data || !Array.isArray(data) || data.length === 0) return 1;
